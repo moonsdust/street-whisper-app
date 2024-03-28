@@ -1,5 +1,8 @@
 # Dependencies to install for application (Work in Progress)
+wheel
 typer[all]
+PyInquirer
+rich
 
 # Dependencies needed for whisper_with_diarization_as_methods.py (From StreetWhisperCode repo)
 # Note: This version does BOTH transcription/translation and speaker diarization
