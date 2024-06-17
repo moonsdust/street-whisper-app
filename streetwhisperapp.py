@@ -58,14 +58,19 @@ def validate_audio_file(audio_file_path: str) -> bool:
         - Audio file inputs are either .wav or .mp3. Whisper can process more audio file inputs, but the checking for
         other "types" of files has not been implemented yet
     """
-    validate_audio_path_msg = magic.from_file(audio_file_path, mime=True)
-    supported_file_extensions = {"mpeg", "mp4", "wav", "webm", "flac", "ogg", "adts"}
-    #Note: In above line, mpeg include checks for mpeg, mp3 and mpga. mp4 includes checks for .mp4 and .m4a
-    # adts files can include some audio files disguised as mp3/mp4
-    for file_ext in supported_file_extensions:
-        if file_ext in validate_audio_path_msg:
-            return True
-    return False
+    try:
+        validate_audio_path_msg = magic.from_file(audio_file_path, mime=True)
+        supported_file_extensions = {"mpeg", "mp4", "wav", "webm", "flac", "ogg", "adts"}
+        #Note: In above line, mpeg include checks for mpeg, mp3 and mpga. mp4 includes checks for .mp4 and .m4a
+        # adts files can include some audio files disguised as mp3/mp4
+        for file_ext in supported_file_extensions:
+            if file_ext in validate_audio_path_msg:
+                return True
+        print("The file type is not supported by Whisper. If you think this is not the case, please contact the developers.")
+        return False
+    except: 
+        print("There was an error reading in the name of the file because it contains a non UTF-8 character. Update the file name and try again.")
+        return False
 
 def authorization():
     """This function deals with access token authentication, catching errors, keyboard interruptions, and more."""
@@ -182,7 +187,6 @@ def questions_ui(diarize_model):
     # Check if the referenced audio file itself is one that Whisper can process
     is_valid_audio_file = validate_audio_file(input_audio_path)
     if not (is_valid_audio_file):
-        print("The file type is not supported by Whisper. If you think this is not the case, please contact the developers")
         return
 
     rprint("[blue]=============================[blue]")
@@ -294,7 +298,7 @@ def credits_ui():
     rprint("")
     rprint("[bold]Credits[bold]")
     rprint("This application was created by STREET Lab: https://www.streetlab.tech/ ")
-    rprint("For details about the technologies and libraries used, visit the following repository: https://github.com/moonsdust/street-whisper-app")
+    rprint("For details about the technologies and libraries used, visit the following repository: https://github.com/street-lab-tech/street-whisper-app")
     rprint("[magenta]=============================[magenta]")
 
 if __name__ == "__main__":

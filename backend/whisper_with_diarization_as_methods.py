@@ -7,6 +7,7 @@ from pyannote.audio import Pipeline
 from backend.merge_timestamps import diarize_text
 from iso639 import Lang
 import torch
+import os
 
 def define_whisper_model(model_path: str, is_english: bool):
     """
@@ -292,7 +293,7 @@ def write_list_to_csv(list_of_csv_content, output_csv_path: str, output_csv_head
 def main(process_selected: str, input_file: str, to_english_selection: bool, model_size_selection: str, destination_selection: str, diarize_model):
 
     # Step 1: Defining input audio path + defining CSV Headers
-    input_audio_path = input_file
+    input_audio_path = os.path.normpath(input_file)
 
     if process_selected == "Transcription Only":
         output_csv_headers = ["Timestamps", "Speaker No", "Text[Orig Lang]"]
@@ -305,8 +306,17 @@ def main(process_selected: str, input_file: str, to_english_selection: bool, mod
         output_format = "transcribe_translate"
 
     now = datetime.now()
-    audio_path_last_backslash_index = input_file.rfind("/")
-    audio_name = input_file[audio_path_last_backslash_index + 1:]
+    # Check OS. The checks for the input file name will depend on the OS
+    if (os.name == 'posix'):
+        audio_path_last_backslash_index = input_audio_path.rfind("/") # Initial assumption: current OS is unix-like
+    elif (os.name == "nt"):
+        # The current OS is Windows
+        audio_path_last_backslash_index = input_audio_path.rfind("\\")
+    else:
+        print("This OS is not supported in the application yet")
+        return #TODO: Will need to clean this up after we do further testing on windows
+
+    audio_name = input_audio_path[audio_path_last_backslash_index + 1:]
 
     # Remove leading and trailing whitespace from audio_name
     audio_name = audio_name.strip()
@@ -316,7 +326,14 @@ def main(process_selected: str, input_file: str, to_english_selection: bool, mod
     destination_selection = destination_selection.strip()
 
     # Constructing output csv path string
-    output_csv_path = destination_selection + "/" + audio_name + "_" + output_format + "_" + str(now.hour) + "_" + str(now.minute) + ".csv"
+    if (os.name == 'posix'):
+        output_csv_path = destination_selection + "/" + audio_name + "_" + output_format + "_" + str(now.hour) + "_" + str(now.minute) + ".csv"
+    elif (os.name == "nt"):
+        output_csv_path = destination_selection + "\\" + audio_name + "_" + output_format + "_" + str(now.hour) + "_" + str(now.minute) + ".csv"
+    else:
+        print("Not sure how to create output path, unknown OS detected")
+        return  # TODO: Will need to clean this up after we do further testing on windows
+
     print("This will be the output path: ", output_csv_path)
     translate_to_english = to_english_selection # True denotes that file is in ENG. Only transcription is needed
 
